@@ -515,6 +515,39 @@ uint8_t Adafruit_EPD::EPD_command(uint8_t c, bool end) {
   return data;
 }
 
+void Adafruit_EPD::EPD_commandList(const uint8_t *init_code)
+{
+  uint8_t buf[64];
+  while (init_code[0] != 0xFE)
+  {
+    uint8_t cmd = init_code[0];
+    init_code++;
+    uint8_t num_args = init_code[0];
+    init_code++;
+    if (cmd == 0xFF)
+    {
+      busy_wait();
+      delay(num_args);
+      continue;
+    }
+
+    if (num_args > sizeof(buf))
+    {
+      Serial.println("ERROR - buf not large enough!");
+      while (1)
+        delay(10);
+    }
+
+    for (int i = 0; i < num_args; i++)
+    {
+      buf[i] = init_code[0];
+      init_code++;
+    }
+
+    EPD_command(cmd, buf, num_args);
+  }
+}
+
 
 /**************************************************************************/
 /*!
